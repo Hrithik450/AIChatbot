@@ -16,7 +16,6 @@ import { Button } from "@/components/ui/button";
 import { signIn } from "next-auth/react";
 import { useState } from "react";
 import { Loader } from "../loader";
-import { redirect } from "next/navigation";
 
 export function SignInForm() {
   const [loading, setLoading] = useState(false);
@@ -32,7 +31,7 @@ export function SignInForm() {
   const onSubmit = async (data: TSignInSchema) => {
     try {
       setLoading(true);
-      signIn("credentials", {
+      await signIn("credentials", {
         email: data.email,
         password: data.password,
         redirectTo: "/",
