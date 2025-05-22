@@ -308,7 +308,7 @@ export default function Chatbot() {
             >
               New Chat
             </button>
-            <div className="overflow-y-auto h-[calc(100%-60px)]">
+            <div className="overflow-y-auto no-scrollbar h-[calc(100%-60px)]">
               {chats.map((chat) => (
                 <div
                   key={chat.id}
