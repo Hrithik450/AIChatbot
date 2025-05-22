@@ -9,11 +9,11 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
         password: {},
       },
       authorize: async (credentials) => {
-        const email = "mhrithik450@gmail.com";
-        const password = "12345";
-
-        if (credentials.email === email && credentials.password === password) {
-          return { email, password };
+        if (
+          credentials.email === process.env.EMAIL &&
+          credentials.password === process.env.PASSWORD
+        ) {
+          return { email: process.env.EMAIL };
         } else {
           throw new Error("Invalid Credentials");
         }

@@ -13,11 +13,13 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { signIn } from "@/lib/auth";
-import { useRouter } from "next/navigation";
+import { signIn } from "next-auth/react";
+import { useState } from "react";
+import { Loader } from "../loader";
+import { redirect } from "next/navigation";
 
 export function SignInForm() {
-  const router = useRouter();
+  const [loading, setLoading] = useState(false);
 
   const form = useForm<TSignInSchema>({
     resolver: zodResolver(signInSchema),
@@ -28,13 +30,18 @@ export function SignInForm() {
   });
 
   const onSubmit = async (data: TSignInSchema) => {
-    const res = await signIn("credentials", {
-      redirect: false,
-      email: data.email,
-      password: data.password,
-    });
-
-    if (res?.ok) router.push("/");
+    try {
+      setLoading(true);
+      signIn("credentials", {
+        email: data.email,
+        password: data.password,
+        redirectTo: "/",
+      });
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -68,8 +75,8 @@ export function SignInForm() {
           )}
         />
 
-        <Button type="submit" className="w-full">
-          Sign In
+        <Button type="submit" className="w-full cursor-pointer">
+          {loading ? <Loader /> : "Sign In"}
         </Button>
       </form>
     </Form>
