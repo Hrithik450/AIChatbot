@@ -34,9 +34,9 @@ const generateRandomString = (length: number): string => {
 };
 
 const formatCorrectionMessage = (data: ResponseData): ChatMessage => {
-  let formattedContent = `👏${data.encouragement}\n`;
-  formattedContent += `✅The Correct Sentence is: ${data.correctedSentence}\n\n`;
-  formattedContent += "🔍Explanations:\n";
+  let formattedContent = `${data.encouragement}\n`;
+  formattedContent += `The Correct Sentence is: ${data.correctedSentence}\n\n`;
+  formattedContent += "Explanations:\n";
 
   data.corrections.forEach((correction, index) => {
     formattedContent += `${index + 1}. ${correction.error}: ${
@@ -250,21 +250,22 @@ export default function Chatbot() {
       });
 
       if (!response.ok) throw new Error("API request failed");
+      const aiResponseRaw = await response.text();
+      const aiResponse = aiResponseRaw.replace(/\\n/g, "").replace(/\\/g, "");
+      const audioUrl = await autoSpeak(aiResponse);
 
-      const data = await response.json();
-      const correctionMessage = formatCorrectionMessage(data);
+      const assistantMessage: ChatMessage = {
+        role: "assistant",
+        content: aiResponse,
+      };
 
-      let speakContent = `${data.encouragement}\n`;
-      speakContent += `The correct sentence is ${data.correctedSentence}\n`;
-      const audioUrl = await autoSpeak(speakContent);
-
-      setMessages((prev) => [...prev, correctionMessage]);
+      setMessages((prev) => [...prev, assistantMessage]);
       setIsLoading(false);
 
       const audio = new Audio(audioUrl);
       audio.play();
 
-      await saveMessage(correctionMessage);
+      await saveMessage(assistantMessage);
     } catch (error) {
       console.error("Error:", error);
       const errorMessage: ChatMessage = {
