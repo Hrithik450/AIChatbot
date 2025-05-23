@@ -2,6 +2,7 @@
 import { useState, useRef, useEffect, FormEvent } from "react";
 import { FiCopy, FiVolume2, FiMic, FiStopCircle, FiMenu } from "react-icons/fi";
 import { SignOut } from "./auth/signout";
+import { Loader } from "./loader";
 
 interface ChatMessage {
   role: string;
@@ -9,9 +10,9 @@ interface ChatMessage {
 }
 
 interface ResponseData {
-  originalSentence: string;
   correctedSentence: string;
   corrections: correction[];
+  encouragement: string;
 }
 
 interface correction {
@@ -33,8 +34,8 @@ const generateRandomString = (length: number): string => {
 };
 
 const formatCorrectionMessage = (data: ResponseData): ChatMessage => {
-  let formattedContent = `📝Original Sentence: ${data.originalSentence}\n\n`;
-  formattedContent += `✅Corrected Sentence: ${data.correctedSentence}\n\n`;
+  let formattedContent = `👏${data.encouragement}\n`;
+  formattedContent += `✅The Correct Sentence is: ${data.correctedSentence}\n\n`;
   formattedContent += "🔍Explanations:\n";
 
   data.corrections.forEach((correction, index) => {
@@ -182,9 +183,9 @@ export default function Chatbot() {
     }
   };
 
-  const speak = async (text: string, index: number) => {
+  const speak = async (text: string, index?: number) => {
     try {
-      setLoadingIndex(index);
+      if (index) setLoadingIndex(index);
       const res = await fetch("/api/speak", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -202,7 +203,27 @@ export default function Chatbot() {
     } catch (error) {
       console.error("Speak error:", error);
     } finally {
-      setLoadingIndex(null);
+      if (index) setLoadingIndex(null);
+    }
+  };
+
+  const autoSpeak = async (text: string) => {
+    try {
+      const res = await fetch("/api/speak", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text }),
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to get audio");
+      }
+
+      const blob = await res.blob();
+      const audioUrl = URL.createObjectURL(blob);
+      return audioUrl;
+    } catch (error) {
+      console.error("Speak error:", error);
     }
   };
 
@@ -233,7 +254,16 @@ export default function Chatbot() {
       const data = await response.json();
       const correctionMessage = formatCorrectionMessage(data);
 
+      let speakContent = `${data.encouragement}\n`;
+      speakContent += `The correct sentence is ${data.correctedSentence}\n`;
+      const audioUrl = await autoSpeak(speakContent);
+
       setMessages((prev) => [...prev, correctionMessage]);
+      setIsLoading(false);
+
+      const audio = new Audio(audioUrl);
+      audio.play();
+
       await saveMessage(correctionMessage);
     } catch (error) {
       console.error("Error:", error);
@@ -242,8 +272,6 @@ export default function Chatbot() {
         content: "Sorry, I encountered an error. Please try again.",
       };
       setMessages((prev) => [...prev, errorMessage]);
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -358,25 +386,7 @@ export default function Chatbot() {
 
         {pageLoading ? (
           <div className="w-full h-full flex justify-center items-center">
-            <svg
-              className="animate-spin h-6 w-6 md:h-8 md:w-8"
-              viewBox="0 0 24 24"
-            >
-              <circle
-                className="opacity-25"
-                cx="12"
-                cy="12"
-                r="10"
-                stroke="currentColor"
-                strokeWidth="4"
-                fill="none"
-              ></circle>
-              <path
-                className="opacity-75"
-                fill="currentColor"
-                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-              ></path>
-            </svg>
+            <Loader />
           </div>
         ) : (
           <div className="flex-1 w-full max-w-3xl mx-auto overflow-y-auto p-2 md:p-4">
@@ -505,7 +515,7 @@ export default function Chatbot() {
             </div>
             <button
               type="submit"
-              className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 md:px-4 md:py-2 rounded-lg disabled:opacity-50 transition-colors text-sm md:text-base"
+              className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 md:px-4 md:py-2 rounded-lg disabled:opacity-50 transition-colors text-sm md:text-base cursor-pointer"
               disabled={isLoading || !input.trim()}
             >
               Send
