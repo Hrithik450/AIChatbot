@@ -1,5 +1,7 @@
+import { ChatsModel } from "@/actions/chats/chats.model";
 import { ChatsService } from "@/actions/chats/chats.service";
 import { Chat } from "@/actions/chats/chats.types";
+import { MessagesModel } from "@/actions/messages/messages.model";
 import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
@@ -41,6 +43,35 @@ export async function GET(request: Request) {
   } catch (error) {
     return NextResponse.json(
       { error: "Failed to fetch chats" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const chatId = searchParams.get("chatId");
+
+    if (!chatId) {
+      return NextResponse.json(
+        { error: "chatId is required" },
+        { status: 400 }
+      );
+    }
+
+    const response =
+      (await MessagesModel.deleteMessagesByChatId(chatId)) &&
+      (await ChatsModel.deleteChat(chatId));
+
+    if (!response) {
+      return NextResponse.json({ error: response }, { status: 404 });
+    }
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    return NextResponse.json(
+      { error: "Failed to delete chat" },
       { status: 500 }
     );
   }

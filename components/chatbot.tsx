@@ -9,17 +9,6 @@ interface ChatMessage {
   content: string;
 }
 
-interface ResponseData {
-  correctedSentence: string;
-  corrections: correction[];
-  encouragement: string;
-}
-
-interface correction {
-  error: string;
-  explanation: string;
-}
-
 const generateRandomString = (length: number): string => {
   const characters =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -31,23 +20,6 @@ const generateRandomString = (length: number): string => {
   }
 
   return result;
-};
-
-const formatCorrectionMessage = (data: ResponseData): ChatMessage => {
-  let formattedContent = `${data.encouragement}\n`;
-  formattedContent += `The Correct Sentence is: ${data.correctedSentence}\n\n`;
-  formattedContent += "Explanations:\n";
-
-  data.corrections.forEach((correction, index) => {
-    formattedContent += `${index + 1}. ${correction.error}: ${
-      correction.explanation
-    }\n`;
-  });
-
-  return {
-    role: "assistant",
-    content: formattedContent,
-  };
 };
 
 export default function Chatbot() {
@@ -137,7 +109,7 @@ export default function Chatbot() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           user_id: userId,
-          title: generateRandomString(12),
+          title: "New Chat",
         }),
       });
 
@@ -250,8 +222,12 @@ export default function Chatbot() {
       });
 
       if (!response.ok) throw new Error("API request failed");
-      const aiResponseRaw = await response.text();
-      const aiResponse = aiResponseRaw.replace(/\\n/g, "").replace(/\\/g, "");
+      const aiResponseRaw = await response.json();
+      const aiResponse = aiResponseRaw.correctedSentence.replace(
+        /\\(?!n)/g,
+        ""
+      );
+
       const audioUrl = await autoSpeak(aiResponse);
 
       const assistantMessage: ChatMessage = {
@@ -291,7 +267,8 @@ export default function Chatbot() {
       <div className="hidden md:flex md:w-64 bg-white border-r border-gray-200 p-4 flex-col">
         <button
           onClick={createNewChat}
-          className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg mb-4 transition-colors cursor-pointer text-sm md:text-base"
+          disabled
+          className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg mb-4 transition-colors cursor-pointer text-sm md:text-base disabled:opacity-50"
         >
           New Chat
         </button>
@@ -414,9 +391,21 @@ export default function Chatbot() {
                 >
                   {message.role === "assistant" ? (
                     <div className="whitespace-pre-line">
+                      {(() => {
+                        console.log(message.content.split("\n"));
+                        return null;
+                      })()}
                       {message.content.split("\n").map((line, i) => (
-                        <p key={i} className={i === 0 ? "font-semibold" : ""}>
-                          {line}
+                        <p key={i}>
+                          {line.split('"').map((part, index) =>
+                            index % 2 === 1 ? (
+                              <span className="font-semibold" key={index}>
+                                {part}
+                              </span>
+                            ) : (
+                              part
+                            )
+                          )}
                         </p>
                       ))}
                     </div>

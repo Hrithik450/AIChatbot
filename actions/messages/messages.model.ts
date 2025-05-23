@@ -21,6 +21,13 @@ export class MessagesModel {
     return await db.select().from(messages).where(eq(messages.chat_id, chatId));
   }
 
+  static async deleteMessagesByChatId(chatId: string): Promise<boolean> {
+    const result = await db
+      .delete(messages)
+      .where(eq(messages.chat_id, chatId));
+    return result.rowCount !== null && result.rowCount > 0;
+  }
+
   static async listMessages(): Promise<Message[]> {
     return await db.select().from(messages);
   }

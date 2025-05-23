@@ -62,6 +62,29 @@ export class MessagesService {
     }
   }
 
+  static async deleteMessagesByChatId(
+    chatId: string
+  ): Promise<MessageResponse> {
+    try {
+      const success = await MessagesModel.deleteMessagesByChatId(chatId);
+      if (!success) {
+        return {
+          success: false,
+          error: "Messages not found",
+        };
+      }
+      return {
+        success: true,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error:
+          error instanceof Error ? error.message : "Failed to delete messages",
+      };
+    }
+  }
+
   static async listMessages(): Promise<MessagesResponse> {
     try {
       const messages = await MessagesModel.listMessages();
