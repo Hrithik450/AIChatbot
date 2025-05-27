@@ -7,8 +7,16 @@ import {
   useLoaderStore,
   useMessageStore,
 } from "@/store/store";
-import { FormEvent, RefObject, useState } from "react";
+import { FormEvent, MouseEvent, RefObject, useState } from "react";
 import { FiMic, FiStopCircle } from "react-icons/fi";
+import {
+  PromptInput,
+  PromptInputAction,
+  PromptInputActions,
+  PromptInputTextarea,
+} from "./ui/prompt-input";
+import { Button } from "./ui/button";
+import { ArrowUp, CircleStop, Mic, Square } from "lucide-react";
 
 interface InputForm {
   recognitionRef: RefObject<any>;
@@ -20,6 +28,7 @@ export function InputForm({ recognitionRef }: InputForm) {
   const { chatLoading, toggleChatLoading } = useLoaderStore();
   const { currentChatId } = useChatStore();
   const { setMessage, saveMessage } = useMessageStore();
+  const [isLoading, setIsLoading] = useState(false);
 
   const toggleRecording = () => {
     if (!recognitionRef.current) {
@@ -38,7 +47,7 @@ export function InputForm({ recognitionRef }: InputForm) {
 
   const autoSpeak = async (text: string) => {
     try {
-      const res = await fetch("/api/speak", {
+      const res = await fetch("/api/model/voice", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text }),
@@ -56,10 +65,10 @@ export function InputForm({ recognitionRef }: InputForm) {
     }
   };
 
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     if (isRecording) toggleRecording();
-    if (!input.trim() || chatLoading || !currentChatId) return;
+    if (!input.trim() || chatLoading) return;
 
     const newMessage: ChatMessage = { role: "user", content: input };
     setMessage(newMessage);
@@ -68,7 +77,7 @@ export function InputForm({ recognitionRef }: InputForm) {
     await saveMessage(newMessage);
 
     try {
-      const response = await fetch("/api/model", {
+      const response = await fetch("/api/model/text", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: newMessage.content }),
@@ -107,38 +116,55 @@ export function InputForm({ recognitionRef }: InputForm) {
 
   return (
     <div className="sticky bottom-0 left-0 right-0 p-2 md:p-4 border-t border-gray-200">
-      <form
-        onSubmit={handleSubmit}
-        className="w-full max-w-3xl mx-auto bg-white rounded-lg md:rounded-xl shadow-sm md:shadow-lg flex items-center p-1 md:p-2"
+      <PromptInput
+        value={input}
+        onValueChange={(value) => setInput(value)}
+        className="max-w-3xl w-full mx-auto"
       >
-        <div className="flex-1 relative mx-1 md:mx-2">
-          <input
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            className="w-full p-2 text-sm md:text-base text-gray-800 focus:outline-none"
-            placeholder="Type your sentence..."
-            disabled={chatLoading}
-          />
-          <button
-            type="button"
-            onClick={toggleRecording}
-            className={`absolute right-2 top-1/2 transform -translate-y-1/2 p-1 rounded-full cursor-pointer ${
-              isRecording ? "text-blue-500 animate-pulse" : "text-gray-500"
-            }`}
-            title={isRecording ? "Stop recording" : "Start recording"}
+        <PromptInputTextarea
+          placeholder="Ask me anything..."
+          disabled={chatLoading}
+        />
+
+        <PromptInputActions className="justify-end pt-2">
+          <PromptInputAction
+            tooltip={isRecording ? "Stop Recording" : "Record"}
           >
-            {isRecording ? <FiStopCircle size={18} /> : <FiMic size={18} />}
-          </button>
-        </div>
-        <button
-          type="submit"
-          className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 md:px-4 md:py-2 rounded-lg disabled:opacity-50 transition-colors text-sm md:text-base cursor-pointer"
-          disabled={chatLoading || !input.trim()}
-        >
-          Send
-        </button>
-      </form>
+            <Button
+              variant="default"
+              size="icon"
+              className={`h-8 w-8 rounded-full cursor-pointer bg-white text-gray-600 hover:bg-gray-200 ${
+                isRecording ? "text-red-400 animate-pulse" : "text-gray-500"
+              }`}
+              onClick={toggleRecording}
+            >
+              {isRecording ? (
+                <CircleStop className="size-6" />
+              ) : (
+                <Mic className="size-5" />
+              )}
+            </Button>
+          </PromptInputAction>
+
+          <PromptInputAction
+            tooltip={isLoading ? "Stop generation" : "Send message"}
+          >
+            <Button
+              variant="default"
+              size="icon"
+              className="h-8 w-8 rounded-full cursor-pointer"
+              onClick={handleSubmit}
+              disabled={chatLoading || !input.trim()}
+            >
+              {isLoading ? (
+                <Square className="size-5 fill-current" />
+              ) : (
+                <ArrowUp className="size-5" />
+              )}
+            </Button>
+          </PromptInputAction>
+        </PromptInputActions>
+      </PromptInput>
     </div>
   );
 }

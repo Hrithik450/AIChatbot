@@ -49,6 +49,27 @@ export class UsersService {
     }
   }
 
+  static async getUserByEmail(email: string): Promise<UserResponse> {
+    try {
+      const user = await UsersModel.getUserByEmail(email);
+      if (!user) {
+        return {
+          success: false,
+          error: "User not found",
+        };
+      }
+      return {
+        success: true,
+        data: user,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Failed to get user",
+      };
+    }
+  }
+
   static async updateUser(
     userId: string,
     data: Partial<User>

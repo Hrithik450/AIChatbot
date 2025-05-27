@@ -1,8 +1,8 @@
 "use client";
-import { signOut } from "next-auth/react";
 import { Button } from "../ui/button";
 import { useState } from "react";
 import { Loader } from "../loader";
+import { signOut } from "next-auth/react";
 
 export const SignOut = () => {
   const [loading, setLoading] = useState(false);
@@ -22,8 +22,9 @@ export const SignOut = () => {
     <div className="flex justify-center w-full cursor-pointer">
       <Button
         className="w-full cursor-pointer"
-        variant="destructive"
+        variant="outline"
         onClick={handleSignOut}
+        disabled={loading}
       >
         {loading ? <Loader /> : "Sign Out"}
       </Button>

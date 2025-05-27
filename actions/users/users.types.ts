@@ -7,6 +7,7 @@ export type NewUser = typeof users.$inferInsert;
 export const userSchema = z.object({
   username: z.string(),
   email: z.string().email(),
+  password: z.string().min(1),
 });
 
 export type UserResponse = {

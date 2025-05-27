@@ -24,9 +24,18 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");
+    const email = searchParams.get("email");
 
     if (id) {
       const response = await UsersService.getUserById(id);
+      if (!response.success) {
+        return NextResponse.json({ error: response.error }, { status: 404 });
+      }
+      return NextResponse.json(response.data);
+    }
+
+    if (email) {
+      const response = await UsersService.getUserByEmail(email);
       if (!response.success) {
         return NextResponse.json({ error: response.error }, { status: 404 });
       }

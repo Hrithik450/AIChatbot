@@ -2,7 +2,7 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { signInSchema, TSignInSchema } from "@/schemas/auth";
+import { signInSchema, TSignInSchema } from "@/lib/db/zodSchema";
 import {
   Form,
   FormControl,

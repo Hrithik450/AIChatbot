@@ -2,8 +2,6 @@
 
 import { useRef, useEffect } from "react";
 import { useChatStore, useInputStore } from "@/store/store";
-import { SideBar } from "./sidebar/sidebar";
-import { MobileSidebar } from "./sidebar/mobileSidebar";
 import { ChatUI } from "./chatUI";
 import { InputForm } from "./inputform";
 import { Header } from "./header";
@@ -48,14 +46,10 @@ export default function Chatbot() {
   }, []);
 
   return (
-    <div className="flex flex-col md:flex-row h-screen bg-gray-100">
-      <SideBar />
-      <MobileSidebar />
-      <div className="flex-1 flex flex-col w-full mx-auto relative overflow-hidden">
-        <Header />
-        <ChatUI />
-        <InputForm recognitionRef={recognitionRef} />
-      </div>
+    <div className="flex-1 flex flex-col w-full mx-auto relative overflow-hidden">
+      <Header />
+      <ChatUI />
+      <InputForm recognitionRef={recognitionRef} />
     </div>
   );
 }

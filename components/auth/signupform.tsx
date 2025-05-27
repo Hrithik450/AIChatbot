@@ -1,7 +1,8 @@
 "use client";
+import bcrypt from "bcryptjs";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { signUpSchema, TSignInSchema, TSignUpSchema } from "@/schemas/auth";
+import { signUpSchema, TSignInSchema, TSignUpSchema } from "@/lib/db/zodSchema";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -12,8 +13,12 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { useState } from "react";
+import { Loader } from "../loader";
+import { signIn } from "next-auth/react";
 
 export function SignUpForm() {
+  const [loading, setLoading] = useState(false);
   const form = useForm<TSignUpSchema>({
     resolver: zodResolver(signUpSchema),
     defaultValues: {
@@ -23,8 +28,31 @@ export function SignUpForm() {
     },
   });
 
-  const onSubmit = async () => {
-    return;
+  const onSubmit = async (data: TSignUpSchema) => {
+    try {
+      setLoading(true);
+      const hashedPassword = await bcrypt.hash(data.password, 10);
+      const response = await fetch("/api/users", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...data,
+          password: hashedPassword,
+        }),
+      });
+
+      if (response.ok) {
+        await signIn("credentials", {
+          email: data.email,
+          password: data.password,
+          redirectTo: "/",
+        });
+      }
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -73,7 +101,7 @@ export function SignUpForm() {
         />
 
         <Button type="submit" className="w-full">
-          Sign Up
+          {loading ? <Loader /> : "Sign Up"}
         </Button>
       </form>
     </Form>
