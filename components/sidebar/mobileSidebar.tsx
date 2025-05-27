@@ -3,11 +3,18 @@ import { useState } from "react";
 import { SignOut } from "../auth/signout";
 import { FiMenu } from "react-icons/fi";
 import { useChatStore } from "@/store/store";
+import { NotebookPen } from "lucide-react";
+import { redirect } from "next/navigation";
 
 export function MobileSidebar() {
   const { chats, createNewChat, currentChatId, setCurrentChatId } =
     useChatStore();
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+
+  const handleNewChat = () => {
+    createNewChat();
+    redirect("/");
+  };
 
   return (
     <>
@@ -32,10 +39,11 @@ export function MobileSidebar() {
           <div className="relative w-64 min-h-screen h-auto bg-white p-4 flex flex-col">
             <div className="flex-1">
               <button
-                onClick={createNewChat}
-                className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg mb-4 transition-colors cursor-pointer w-full"
+                onClick={handleNewChat}
+                className="text-black hover:bg-zinc-100 py-2 px-4 rounded-full mb-4 transition-colors cursor-pointer text-sm md:text-base flex items-center justify-start gap-2"
               >
-                New Chat
+                <NotebookPen className="w-4 h-4" />
+                <span>New chat</span>
               </button>
 
               <div className="overflow-y-auto no-scrollbar h-[calc(100%-60px)]">
@@ -46,16 +54,13 @@ export function MobileSidebar() {
                       setCurrentChatId(chat.id);
                       setIsMobileSidebarOpen(false);
                     }}
-                    className={`p-3 rounded-lg cursor-pointer mb-2 ${
+                    className={`px-4 py-2 rounded-full cursor-pointer mb-2 ${
                       currentChatId === chat.id
                         ? "bg-blue-100"
                         : "hover:bg-gray-100"
                     }`}
                   >
-                    <p className="truncate">{chat.title}</p>
-                    <p className="text-xs text-gray-500">
-                      {new Date(chat.created_at).toLocaleString()}
-                    </p>
+                    <p className="truncate line-clamp-1">{chat.title}</p>
                   </div>
                 ))}
               </div>
