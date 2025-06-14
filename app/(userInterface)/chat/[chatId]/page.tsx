@@ -1,5 +1,5 @@
 "use client";
-import { Chatbot } from "@/components/chatBot";
+import { Chatbot } from "@/components/chat-bot";
 import { useChatStore, useMessageStore } from "@/store/store";
 import { useParams } from "next/navigation";
 import React, { useEffect } from "react";

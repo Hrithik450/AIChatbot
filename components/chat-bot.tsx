@@ -1,8 +1,8 @@
 "use client";
 
 import { useRef, useEffect } from "react";
-import { ChatUI } from "./chatUI";
-import { InputForm } from "./inputForm";
+import { ChatUI } from "./chat-ui";
+import { InputForm } from "./input-form";
 import { Header } from "./header";
 import { useInputStore, useUserStore } from "@/store/store";
 import { getSession } from "next-auth/react";
