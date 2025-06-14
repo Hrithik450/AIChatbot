@@ -3,7 +3,7 @@ import { SignOut } from "../auth/sign-out";
 import { redirect, useRouter } from "next/navigation";
 import { NotebookPen } from "lucide-react";
 import { UsersService } from "@/actions/users/users.service";
-import React from "react";
+import React, { useEffect } from "react";
 import { useChatStore, useMessageStore } from "@/store/store";
 
 interface SideBarProps {

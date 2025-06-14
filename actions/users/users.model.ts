@@ -51,7 +51,7 @@ export class UsersModel {
       ["chats_by_user"],
       {
         tags: ["user-chats"],
-        revalidate: 3600,
+        revalidate: 60,
       }
     );
 

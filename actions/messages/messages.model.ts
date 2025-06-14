@@ -32,7 +32,7 @@ export class MessagesModel {
       },
       [`messages_by_chat_${chatId}`],
       {
-        revalidate: 3600,
+        revalidate: 10,
         tags: [`chat-${chatId}`],
       }
     );
