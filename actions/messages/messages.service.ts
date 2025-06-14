@@ -84,20 +84,4 @@ export class MessagesService {
       };
     }
   }
-
-  static async listMessages(): Promise<MessagesResponse> {
-    try {
-      const messages = await MessagesModel.listMessages();
-      return {
-        success: true,
-        data: messages,
-      };
-    } catch (error) {
-      return {
-        success: false,
-        error:
-          error instanceof Error ? error.message : "Failed to list messages",
-      };
-    }
-  }
 }

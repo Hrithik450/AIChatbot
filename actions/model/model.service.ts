@@ -5,6 +5,8 @@ import {
   TCreateContentSchema,
   TCreateVoiceContentSchema,
 } from "@/lib/validations";
+import { db } from "@/lib/db";
+import { desc } from "drizzle-orm";
 
 const openai = new OpenAI({
   apiKey: process.env.OPEN_API_KEY,
@@ -14,12 +16,29 @@ export class ModelService {
   static async createContent(data: TCreateContentSchema) {
     try {
       const validatedData = createContentSchema.parse(data);
+      const { message, systemPrompt, chatId } = validatedData;
 
-      const { message, systemPrompt } = validatedData;
+      let chatHistory: {
+        role: "user" | "assistant" | "system";
+        content: string;
+      }[] = [];
+      if (chatId) {
+        const data = await db.query.messages.findMany({
+          where: (m, { eq }) => eq(m.chat_id, chatId),
+          orderBy: (m) => [desc(m.created_at)],
+          limit: 10,
+        });
+        chatHistory = data.reverse().map((m) => ({
+          role: m.role as "user" | "assistant" | "system",
+          content: m.content,
+        }));
+      }
+
       const completion = await openai.chat.completions.create({
         model: "gpt-4.1-mini",
         messages: [
           { role: "system", content: systemPrompt },
+          ...(chatHistory ?? []),
           { role: "user", content: message },
         ],
         temperature: 0,

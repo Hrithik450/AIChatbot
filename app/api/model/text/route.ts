@@ -10,11 +10,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Please provide a user prompt" });
   }
 
-  const { message, systemPrompt } = validatedFields;
+  const { message, systemPrompt, chatId } = validatedFields;
   try {
     const response = await ModelService.createContent({
       message,
       systemPrompt,
+      chatId,
     });
 
     if (!response.success) {

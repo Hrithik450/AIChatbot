@@ -85,21 +85,6 @@ export class UsersService {
     }
   }
 
-  static async getMessagesOfChatId(chatId: string) {
-    try {
-      const messages = await UsersModel.getMessagesOfChatId(chatId);
-      return {
-        success: true,
-        data: messages,
-      };
-    } catch (error) {
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : "Failed to get chats",
-      };
-    }
-  }
-
   static async updateUser(
     userId: string,
     data: Partial<User>
@@ -142,21 +127,6 @@ export class UsersService {
       return {
         success: false,
         error: error instanceof Error ? error.message : "Failed to delete user",
-      };
-    }
-  }
-
-  static async listUsers(): Promise<UsersResponse> {
-    try {
-      const users = await UsersModel.listUsers();
-      return {
-        success: true,
-        data: users,
-      };
-    } catch (error) {
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : "Failed to list users",
       };
     }
   }

@@ -26,6 +26,7 @@ export type TSignUpSchema = z.infer<typeof signUpSchema>;
 export const createContentSchema = z.object({
   message: z.string(),
   systemPrompt: z.string(),
+  chatId: z.string().nullable(),
 });
 export type TCreateContentSchema = z.infer<typeof createContentSchema>;
 

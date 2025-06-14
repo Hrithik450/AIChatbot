@@ -3,7 +3,7 @@ import {
   revalidateChatMessages,
 } from "@/actions/revalidates/revalidate";
 import { ChatMessage, Message } from "@/lib/client/types.client";
-import { TITLE_SYSTEM_PROMPT } from "@/lib/openai";
+import { TITLE_SYSTEM_PROMPT } from "@/lib/prompt-engineer";
 import { create } from "zustand";
 
 interface ChatStoreProps {
@@ -98,6 +98,7 @@ export const useMessageStore = create<MessageStore>((set) => ({
           body: JSON.stringify({
             message: message.content,
             systemPrompt: TITLE_SYSTEM_PROMPT,
+            chatId: null,
           }),
         });
         const titleData = await titleRes.json();

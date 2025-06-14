@@ -17,7 +17,7 @@ import {
 } from "./ui/prompt-input";
 import { Button } from "./ui/button";
 import { ArrowUp, CircleStop, Mic, Square } from "lucide-react";
-import { CONTENT_SYSTEM_PROMPT } from "@/lib/openai";
+import { CONTENT_SYSTEM_PROMPT } from "@/lib/prompt-engineer";
 
 interface InputForm {
   recognitionRef: RefObject<any>;
@@ -84,6 +84,7 @@ export function InputForm({ recognitionRef }: InputForm) {
         body: JSON.stringify({
           message: newMessage.content,
           systemPrompt: CONTENT_SYSTEM_PROMPT,
+          chatId: currentChatId,
         }),
       });
 

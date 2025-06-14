@@ -1,6 +1,7 @@
 import { relations } from "drizzle-orm";
 import {
   index,
+  pgEnum,
   pgTable,
   text,
   timestamp,

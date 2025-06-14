@@ -46,8 +46,4 @@ export class MessagesModel {
       .where(eq(messages.chat_id, chatId));
     return result.rowCount !== null && result.rowCount > 0;
   }
-
-  static async listMessages(): Promise<Message[]> {
-    return await db.select().from(messages);
-  }
 }

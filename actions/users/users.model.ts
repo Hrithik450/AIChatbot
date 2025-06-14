@@ -20,6 +20,27 @@ export class UsersModel {
     return user || null;
   }
 
+  static async getChatsByUserId(id: string) {
+    const cachedChats = unstable_cache(
+      async () => {
+        const chats = await db.query.users.findFirst({
+          where: (users, { eq }) => eq(users.id, id),
+          with: {
+            chats: { columns: { id: true, title: true } },
+          },
+        });
+        return chats;
+      },
+      ["chats_by_user"],
+      {
+        tags: ["user-chats"],
+        revalidate: 30,
+      }
+    );
+
+    return await cachedChats();
+  }
+
   static async updateUser(
     id: string,
     data: Partial<NewUser>
@@ -35,40 +56,5 @@ export class UsersModel {
   static async deleteUser(id: string): Promise<boolean> {
     const result = await db.delete(users).where(eq(users.id, id));
     return result.rowCount !== null && result.rowCount > 0;
-  }
-
-  static async getChatsByUserId(id: string) {
-    const cachedChats = unstable_cache(
-      async () => {
-        const chats = await db.query.users.findFirst({
-          where: (users, { eq }) => eq(users.id, id),
-          with: {
-            chats: { columns: { id: true, title: true } },
-          },
-        });
-        return chats;
-      },
-      ["chats_by_user"],
-      {
-        tags: ["user-chats"],
-        revalidate: 60,
-      }
-    );
-
-    return await cachedChats();
-  }
-
-  static async getMessagesOfChatId(chatId: string) {
-    const messages = await db.query.chats.findFirst({
-      where: (chats, { eq }) => eq(chats.id, chatId),
-      with: {
-        messages: { columns: { role: true, content: true } },
-      },
-    });
-    return messages;
-  }
-
-  static async listUsers(): Promise<User[]> {
-    return await db.select().from(users);
   }
 }

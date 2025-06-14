@@ -100,19 +100,4 @@ export class ChatsService {
       };
     }
   }
-
-  static async getChats() {
-    try {
-      const chats = await ChatsModel.getChats();
-      return {
-        success: true,
-        data: chats,
-      };
-    } catch (error) {
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : "Failed to list chats",
-      };
-    }
-  }
 }
