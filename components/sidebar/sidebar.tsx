@@ -1,11 +1,21 @@
 "use client";
-import { useChatStore } from "@/store/store";
-import { SignOut } from "../auth/signout";
+import { SignOut } from "../auth/sign-out";
 import { redirect, useRouter } from "next/navigation";
 import { NotebookPen } from "lucide-react";
+import { UsersService } from "@/actions/users/users.service";
+import React from "react";
+import { useChatStore, useMessageStore } from "@/store/store";
 
-export function SideBar() {
-  const { chats, currentChatId, createNewChat } = useChatStore();
+interface SideBarProps {
+  promises: Promise<
+    [Awaited<ReturnType<typeof UsersService.getChatsByUserId>>]
+  >;
+}
+
+export function SideBar({ promises }: SideBarProps) {
+  const [{ data }] = React.use(promises);
+  const { currentChatId, setCurrentChatId } = useChatStore();
+  const { clearMessages } = useMessageStore();
   const router = useRouter();
 
   const handleChat = (chatId: string) => {
@@ -13,7 +23,8 @@ export function SideBar() {
   };
 
   const handleNewChat = () => {
-    createNewChat();
+    setCurrentChatId(null);
+    clearMessages();
     redirect("/");
   };
 
@@ -28,17 +39,19 @@ export function SideBar() {
       </button>
 
       <div className="flex-1 overflow-y-auto">
-        {chats.map((chat) => (
-          <div
-            key={chat.id}
-            onClick={() => handleChat(chat.id)}
-            className={`p-2 md:px-5 rounded-full cursor-pointer mb-2 text-sm md:text-base ${
-              currentChatId === chat.id ? "bg-blue-100" : "hover:bg-gray-100"
-            }`}
-          >
-            <p className="truncate line-clamp-1">{chat.title}</p>
-          </div>
-        ))}
+        {data?.chats &&
+          data.chats.length > 0 &&
+          data.chats.map((chat) => (
+            <div
+              key={chat.id}
+              onClick={() => handleChat(chat.id)}
+              className={`p-2 md:px-5 rounded-full cursor-pointer mb-2 text-sm md:text-base ${
+                currentChatId === chat.id ? "bg-blue-100" : "hover:bg-gray-100"
+              }`}
+            >
+              <p className="truncate line-clamp-1">{chat.title}</p>
+            </div>
+          ))}
       </div>
 
       <div className="cursor-pointer">

@@ -1,4 +1,4 @@
-import { messages } from "@/lib/db/schema";
+import { messages } from "@/lib/drizzle/schema";
 import { z } from "zod";
 
 export type Message = typeof messages.$inferSelect;

@@ -1,22 +1,20 @@
-import { Chat, ChatMessage, Message } from "@/lib/client/types.client";
+import {
+  revalidateChat,
+  revalidateChatMessages,
+} from "@/actions/revalidates/revalidate";
+import { ChatMessage, Message } from "@/lib/client/types.client";
+import { TITLE_SYSTEM_PROMPT } from "@/lib/openai";
 import { create } from "zustand";
 
-interface ChatStore {
-  chats: Chat[];
+interface ChatStoreProps {
   currentChatId: string | null;
-  loadChat: (chatId: string) => void;
-  loadChats: () => void;
-  setChat: (newChat: Chat) => void;
-  setCurrentChatId: (chatId: string) => void;
-  createNewChat: () => void;
-  clearChat: () => void;
+  setCurrentChatId: (id: string | null) => void;
 }
 
-interface MessageStore {
-  messages: ChatMessage[];
-  loadMessages: (chatId: string) => void;
-  setMessage: (newMessage: ChatMessage) => void;
-  saveMessage: (message: ChatMessage) => void;
+interface InputStore {
+  input: string;
+  setTranscript: (text: string) => void;
+  setInput: (value: string) => void;
 }
 
 interface LoaderStore {
@@ -26,65 +24,44 @@ interface LoaderStore {
   toggleChatLoading: () => void;
 }
 
+interface MessageStore {
+  messages: ChatMessage[];
+  loadMessages: (chatId: string) => void;
+  setMessage: (newMessage: ChatMessage) => void;
+  saveMessage: (message: ChatMessage) => void;
+  clearMessages: () => void;
+}
+
 interface UserStore {
   currentUserId: string | null;
+  setCurrentUserId: (id: string) => void;
 }
 
-interface InputStore {
-  input: string;
-  setTranscript: (text: string) => void;
-  setInput: (value: string) => void;
-}
-
-export const useChatStore = create<ChatStore>((set, get) => ({
-  chats: [],
+export const useChatStore = create<ChatStoreProps>((set) => ({
   currentChatId: null,
-  loadChat: async (chatId) => {
-    const { toggleLoading } = useLoaderStore.getState();
-    const { setCurrentChatId } = get();
-    try {
-      toggleLoading();
-      setCurrentChatId(chatId);
-    } catch (error) {
-      console.error(error);
-    } finally {
-      toggleLoading();
-    }
-  },
-  loadChats: async () => {
-    const { toggleLoading } = useLoaderStore.getState();
+  setCurrentChatId: (id) => set({ currentChatId: id }),
+}));
 
-    try {
-      toggleLoading();
-      const response = await fetch(`/api/chats`);
-      const chats: Chat[] = await response.json();
-      set({ chats });
-    } catch (e) {
-      console.error("Error loading chats:", e);
-    } finally {
-      toggleLoading();
-    }
-  },
-  setChat: (newChat) =>
+export const useInputStore = create<InputStore>((set) => ({
+  input: "",
+  setTranscript: (text) =>
     set((state) => ({
-      chats: [...state.chats, newChat],
+      input: state.input + " " + text,
     })),
-  setCurrentChatId: (chatId) => {
-    set({ currentChatId: chatId });
-    useMessageStore.getState().loadMessages(chatId);
-  },
-  createNewChat: async () => {
-    try {
-      set({ currentChatId: null });
-      useMessageStore.setState({ messages: [] });
-    } catch (error) {
-      console.error("Error creating new chat:", error);
-    }
-  },
-  clearChat: () => {
-    set({ currentChatId: null });
-    useMessageStore.setState({ messages: [] });
-  },
+  setInput: (value) => set({ input: value }),
+}));
+
+export const useLoaderStore = create<LoaderStore>((set) => ({
+  loading: false,
+  chatLoading: false,
+  toggleLoading: () =>
+    set((state) => ({
+      loading: !state.loading,
+    })),
+  toggleChatLoading: () =>
+    set((state) => ({
+      chatLoading: !state.chatLoading,
+    })),
 }));
 
 export const useMessageStore = create<MessageStore>((set) => ({
@@ -107,18 +84,21 @@ export const useMessageStore = create<MessageStore>((set) => ({
     set((state) => ({
       messages: [...state.messages, newMessage],
     })),
+
   saveMessage: async (message) => {
-    const { setChat, currentChatId, setCurrentChatId } =
-      useChatStore.getState();
+    const { currentChatId, setCurrentChatId } = useChatStore.getState();
     const { currentUserId } = useUserStore.getState();
     let chatId = currentChatId;
 
     try {
       if (!chatId) {
-        const titleRes = await fetch("/api/model/title", {
+        const titleRes = await fetch("/api/model/text", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ message: message.content }),
+          body: JSON.stringify({
+            message: message.content,
+            systemPrompt: TITLE_SYSTEM_PROMPT,
+          }),
         });
         const titleData = await titleRes.json();
         if (!titleData?.title) return;
@@ -132,9 +112,9 @@ export const useMessageStore = create<MessageStore>((set) => ({
           }),
         });
         const newChat = await chatRes.json();
-        setChat(newChat);
         setCurrentChatId(newChat.id);
         chatId = newChat.id;
+        revalidateChat();
       }
 
       await fetch("/api/messages", {
@@ -146,34 +126,17 @@ export const useMessageStore = create<MessageStore>((set) => ({
           content: message.content,
         }),
       });
+      revalidateChatMessages(chatId);
     } catch (error) {
       console.error("Error saving message:", error);
     }
   },
-}));
-
-export const useLoaderStore = create<LoaderStore>((set) => ({
-  loading: false,
-  chatLoading: false,
-  toggleLoading: () =>
-    set((state) => ({
-      loading: !state.loading,
-    })),
-  toggleChatLoading: () =>
-    set((state) => ({
-      chatLoading: !state.chatLoading,
-    })),
+  clearMessages: () => {
+    set({ messages: [] });
+  },
 }));
 
 export const useUserStore = create<UserStore>((set) => ({
-  currentUserId: "87b4245c-f1a8-41ea-aec5-70cfc81b3e91",
-}));
-
-export const useInputStore = create<InputStore>((set) => ({
-  input: "",
-  setTranscript: (text) =>
-    set((state) => ({
-      input: state.input + " " + text,
-    })),
-  setInput: (value) => set({ input: value }),
+  currentUserId: null,
+  setCurrentUserId: (id) => set({ currentUserId: id }),
 }));

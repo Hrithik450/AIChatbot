@@ -40,6 +40,21 @@ export class ChatsService {
     }
   }
 
+  static async getChatsByUserId(id: string): Promise<ChatsResponse> {
+    try {
+      const chats = await ChatsModel.getChatsByUserId(id);
+      return {
+        success: true,
+        data: chats,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Failed to get chat",
+      };
+    }
+  }
+
   static async updateChat(
     id: string,
     data: Partial<Chat>
@@ -86,9 +101,9 @@ export class ChatsService {
     }
   }
 
-  static async listChats(): Promise<ChatsResponse> {
+  static async getChats() {
     try {
-      const chats = await ChatsModel.listChats();
+      const chats = await ChatsModel.getChats();
       return {
         success: true,
         data: chats,

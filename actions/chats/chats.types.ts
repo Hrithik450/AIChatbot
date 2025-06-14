@@ -1,4 +1,4 @@
-import { chats } from "@/lib/db/schema";
+import { chats } from "@/lib/drizzle/schema";
 import { z } from "zod";
 
 export type Chat = typeof chats.$inferSelect;

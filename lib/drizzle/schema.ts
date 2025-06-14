@@ -1,3 +1,4 @@
+import { relations } from "drizzle-orm";
 import {
   index,
   pgTable,
@@ -55,3 +56,22 @@ export const messages = pgTable(
     ),
   })
 );
+
+export const userRelations = relations(users, ({ many }) => ({
+  chats: many(chats),
+}));
+
+export const chatRelations = relations(chats, ({ one, many }) => ({
+  user: one(users, {
+    fields: [chats.user_id],
+    references: [users.id],
+  }),
+  messages: many(messages),
+}));
+
+export const messageRelations = relations(messages, ({ one, many }) => ({
+  chats: one(chats, {
+    fields: [messages.chat_id],
+    references: [chats.id],
+  }),
+}));

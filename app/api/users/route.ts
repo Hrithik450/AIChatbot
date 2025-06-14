@@ -1,12 +1,20 @@
+import bcrypt from "bcryptjs";
 import { NextResponse } from "next/server";
 import { UsersService } from "@/actions/users/users.service";
-import type { User } from "@/actions/users/users.types";
+import { signUpSchema } from "@/lib/validations";
 
 export async function POST(request: Request) {
   try {
-    const data: Partial<User> = await request.json();
-    const response = await UsersService.createUser(data);
+    const data = await request.json();
+    const validatedFields = signUpSchema.parse(data);
 
+    const { password } = validatedFields;
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const response = await UsersService.createUser({
+      ...validatedFields,
+      password: hashedPassword,
+    });
     if (!response.success) {
       return NextResponse.json({ error: response.error }, { status: 400 });
     }

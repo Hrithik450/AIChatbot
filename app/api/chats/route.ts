@@ -35,7 +35,7 @@ export async function GET(request: Request) {
       return NextResponse.json(response.data);
     }
 
-    const response = await ChatsService.listChats();
+    const response = await ChatsService.getChats();
     if (!response.success) {
       return NextResponse.json({ error: response.error }, { status: 500 });
     }

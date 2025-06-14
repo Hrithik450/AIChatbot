@@ -17,6 +17,7 @@ import {
 } from "./ui/prompt-input";
 import { Button } from "./ui/button";
 import { ArrowUp, CircleStop, Mic, Square } from "lucide-react";
+import { CONTENT_SYSTEM_PROMPT } from "@/lib/openai";
 
 interface InputForm {
   recognitionRef: RefObject<any>;
@@ -74,21 +75,21 @@ export function InputForm({ recognitionRef }: InputForm) {
     setMessage(newMessage);
     setInput("");
     toggleChatLoading();
-    await saveMessage(newMessage);
+    saveMessage(newMessage);
 
     try {
       const response = await fetch("/api/model/text", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: newMessage.content }),
+        body: JSON.stringify({
+          message: newMessage.content,
+          systemPrompt: CONTENT_SYSTEM_PROMPT,
+        }),
       });
 
       if (!response.ok) throw new Error("API request failed");
       const aiResponseRaw = await response.json();
-      const aiResponse = aiResponseRaw.correctedSentence.replace(
-        /\\(?!n)/g,
-        ""
-      );
+      const aiResponse = aiResponseRaw.response.replace(/\\(?!n)/g, "");
 
       const audioUrl = await autoSpeak(aiResponse);
 

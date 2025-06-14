@@ -2,7 +2,7 @@
 import { Button } from "../ui/button";
 import { useState } from "react";
 import { Loader } from "../loader";
-import { signOut } from "next-auth/react";
+import { logout } from "@/actions/auth/sign-out";
 
 export const SignOut = () => {
   const [loading, setLoading] = useState(false);
@@ -10,7 +10,7 @@ export const SignOut = () => {
   const handleSignOut = async () => {
     try {
       setLoading(true);
-      await signOut();
+      await logout();
     } catch (error) {
       console.log(error);
     } finally {

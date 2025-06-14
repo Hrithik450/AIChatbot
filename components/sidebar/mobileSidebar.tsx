@@ -1,18 +1,32 @@
 "use client";
-import { useState } from "react";
-import { SignOut } from "../auth/signout";
+import React, { useState } from "react";
+import { SignOut } from "../auth/sign-out";
 import { FiMenu } from "react-icons/fi";
-import { useChatStore } from "@/store/store";
+import { useChatStore, useMessageStore } from "@/store/store";
 import { NotebookPen } from "lucide-react";
-import { redirect } from "next/navigation";
+import { redirect, useRouter } from "next/navigation";
+import { UsersService } from "@/actions/users/users.service";
 
-export function MobileSidebar() {
-  const { chats, createNewChat, currentChatId, setCurrentChatId } =
-    useChatStore();
+interface SideBarProps {
+  promises: Promise<
+    [Awaited<ReturnType<typeof UsersService.getChatsByUserId>>]
+  >;
+}
+
+export function MobileSidebar({ promises }: SideBarProps) {
+  const [{ data }] = React.use(promises);
+  const { currentChatId, setCurrentChatId } = useChatStore();
+  const { clearMessages } = useMessageStore();
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const router = useRouter();
+
+  const handleChat = (chatId: string) => {
+    router.push(`/chat/${chatId}`);
+  };
 
   const handleNewChat = () => {
-    createNewChat();
+    setCurrentChatId(null);
+    clearMessages();
     redirect("/");
   };
 
@@ -47,22 +61,24 @@ export function MobileSidebar() {
               </button>
 
               <div className="overflow-y-auto no-scrollbar h-[calc(100%-60px)]">
-                {chats.map((chat) => (
-                  <div
-                    key={chat.id}
-                    onClick={() => {
-                      setCurrentChatId(chat.id);
-                      setIsMobileSidebarOpen(false);
-                    }}
-                    className={`px-4 py-2 rounded-full cursor-pointer mb-2 ${
-                      currentChatId === chat.id
-                        ? "bg-blue-100"
-                        : "hover:bg-gray-100"
-                    }`}
-                  >
-                    <p className="truncate line-clamp-1">{chat.title}</p>
-                  </div>
-                ))}
+                {data?.chats &&
+                  data.chats.length > 0 &&
+                  data.chats.map((chat) => (
+                    <div
+                      key={chat.id}
+                      onClick={() => {
+                        handleChat(chat.id);
+                        setIsMobileSidebarOpen(false);
+                      }}
+                      className={`px-4 py-2 rounded-full cursor-pointer mb-2 ${
+                        currentChatId === chat.id
+                          ? "bg-blue-100"
+                          : "hover:bg-gray-100"
+                      }`}
+                    >
+                      <p className="truncate line-clamp-1">{chat.title}</p>
+                    </div>
+                  ))}
               </div>
             </div>
 

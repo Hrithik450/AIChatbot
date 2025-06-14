@@ -4,6 +4,10 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "db:generate": "dotenv -e .env.local -- drizzle-kit generate",
+    "db:migrate": "dotenv -e .env.local -- tsx lib/drizzle/migration.ts",
+    "db:run": "dotenv -e .env.local -- drizzle-kit studio",
+    "db:drop": "drizzle-kit drop",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
@@ -18,7 +22,8 @@
     "bcryptjs": "^3.0.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "dotenv": "^16.5.0",
+    "dotenv-cli": "^8.0.0",
+    "drizzle-kit": "^0.31.1",
     "drizzle-orm": "^0.43.1",
     "lucide-react": "^0.511.0",
     "marked": "^15.0.12",
@@ -27,6 +32,7 @@
     "nuqs": "^2.4.3",
     "openai": "^4.102.0",
     "pg": "^8.16.0",
+    "postgres": "^3.4.7",
     "prisma": "^6.8.2",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
@@ -37,6 +43,7 @@
     "remark-gfm": "^4.0.1",
     "shiki": "^3.4.2",
     "tailwind-merge": "^3.3.0",
+    "tsx": "^4.20.3",
     "zod": "^3.25.20",
     "zustand": "^5.0.5"
   },

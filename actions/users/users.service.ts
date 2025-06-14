@@ -70,6 +70,36 @@ export class UsersService {
     }
   }
 
+  static async getChatsByUserId(id: string) {
+    try {
+      const chats = await UsersModel.getChatsByUserId(id);
+      return {
+        success: true,
+        data: chats,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Failed to get chats",
+      };
+    }
+  }
+
+  static async getMessagesOfChatId(chatId: string) {
+    try {
+      const messages = await UsersModel.getMessagesOfChatId(chatId);
+      return {
+        success: true,
+        data: messages,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Failed to get chats",
+      };
+    }
+  }
+
   static async updateUser(
     userId: string,
     data: Partial<User>

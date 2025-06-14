@@ -1,15 +1,27 @@
 "use client";
 
 import { useRef, useEffect } from "react";
-import { useChatStore, useInputStore } from "@/store/store";
 import { ChatUI } from "./chatUI";
-import { InputForm } from "./inputform";
+import { InputForm } from "./inputForm";
 import { Header } from "./header";
+import { useInputStore, useUserStore } from "@/store/store";
+import { getSession } from "next-auth/react";
 
-export default function Chatbot() {
-  const { loadChats } = useChatStore();
-  const { setTranscript } = useInputStore();
+export function Chatbot() {
   const recognitionRef = useRef<any>(null);
+  const { setCurrentUserId } = useUserStore();
+  const { setTranscript } = useInputStore();
+
+  useEffect(() => {
+    const fetchSession = async () => {
+      const session = await getSession();
+      if (session) {
+        setCurrentUserId(session.user.id);
+      }
+    };
+
+    fetchSession();
+  }, []);
 
   useEffect(() => {
     const SpeechRecognition =
@@ -35,8 +47,6 @@ export default function Chatbot() {
     } else {
       alert("Speech Recognition not supported in this browser.");
     }
-
-    loadChats();
 
     return () => {
       if (recognitionRef.current) {

@@ -1,27 +1,21 @@
+import { ModelService } from "@/actions/model/model.service";
+import { createVoiceContentSchema } from "@/lib/validations";
 import { NextRequest, NextResponse } from "next/server";
-import OpenAI from "openai";
-
-const openai = new OpenAI({
-  apiKey: process.env.OPEN_API_KEY,
-});
 
 export async function POST(req: NextRequest) {
-  const { text } = await req.json();
-  if (!text || text === "")
+  const data = await req.json();
+  const validatedFields = createVoiceContentSchema.parse(data);
+
+  if (!validatedFields) {
     return NextResponse.json({ error: "Please provide a text" });
+  }
 
   try {
-    const mp3 = await openai.audio.speech.create({
-      model: "gpt-4o-mini-tts",
-      voice: "ash",
-      input: text,
-      instructions: "Speak in a cheerful and positive tone.",
+    const response = await ModelService.createVoiceContent({
+      text: validatedFields.text,
     });
 
-    const audioBuffer = Buffer.from(await mp3.arrayBuffer());
-    if (!audioBuffer) throw new Error("Server is busy, try again later!");
-
-    return new NextResponse(audioBuffer, {
+    return new NextResponse(response.data, {
       status: 200,
       headers: {
         "Content-Type": "audio/mpeg",

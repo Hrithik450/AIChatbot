@@ -1,7 +1,8 @@
 import { db } from "@/lib/db";
-import { users } from "@/lib/db/schema";
+import { users } from "@/lib/drizzle/schema";
 import { eq } from "drizzle-orm";
 import type { NewUser, User } from "./users.types";
+import { unstable_cache } from "next/cache";
 
 export class UsersModel {
   static async createUser(data: NewUser): Promise<User> {
@@ -34,6 +35,37 @@ export class UsersModel {
   static async deleteUser(id: string): Promise<boolean> {
     const result = await db.delete(users).where(eq(users.id, id));
     return result.rowCount !== null && result.rowCount > 0;
+  }
+
+  static async getChatsByUserId(id: string) {
+    const cachedChats = unstable_cache(
+      async () => {
+        const chats = await db.query.users.findFirst({
+          where: (users, { eq }) => eq(users.id, id),
+          with: {
+            chats: { columns: { id: true, title: true } },
+          },
+        });
+        return chats;
+      },
+      ["chats_by_user"],
+      {
+        tags: ["user-chats"],
+        revalidate: 3600,
+      }
+    );
+
+    return await cachedChats();
+  }
+
+  static async getMessagesOfChatId(chatId: string) {
+    const messages = await db.query.chats.findFirst({
+      where: (chats, { eq }) => eq(chats.id, chatId),
+      with: {
+        messages: { columns: { role: true, content: true } },
+      },
+    });
+    return messages;
   }
 
   static async listUsers(): Promise<User[]> {

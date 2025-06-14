@@ -1,9 +1,8 @@
 import bcrypt from "bcryptjs";
 import NextAuth from "next-auth";
-import { redirect } from "next/navigation";
-import { TSignInSchema } from "./db/zodSchema";
 import { UsersService } from "@/actions/users/users.service";
 import Credentials from "next-auth/providers/credentials";
+import { signInSchema } from "./validations";
 
 export const { auth, handlers, signIn, signOut } = NextAuth({
   providers: [
@@ -13,23 +12,45 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
         password: { label: "Password", type: "password" },
       },
       authorize: async (credentials) => {
-        const { email, password } = credentials as TSignInSchema;
+        const validatedFields = signInSchema.safeParse(credentials);
+        if (!validatedFields.success) {
+          return null;
+        }
 
+        const { email, password } = validatedFields.data;
         const response = await UsersService.getUserByEmail(email);
-        if (!response.success || !response.data) return null;
+
+        if (!response.success || !response.data) {
+          return null;
+        }
 
         const user = response.data;
         const isMatch = await bcrypt.compare(password, user.password);
 
-        if (email === user.email && isMatch) {
-          return { id: user.id, email: user.email };
+        if (!isMatch) {
+          return null;
         }
 
-        return null;
+        return { id: user.id, email: user.email };
       },
     }),
   ],
-  pages: {
-    signIn: "/auth/signin",
+  session: {
+    strategy: "jwt",
   },
+  callbacks: {
+    async session({ session, token }) {
+      session.user.id = token.id as string;
+      return session;
+    },
+
+    async jwt({ token, user }) {
+      if (user) token.id = user.id;
+      return token;
+    },
+  },
+  pages: {
+    signIn: "/signin",
+  },
+  secret: process.env.AUTH_SECRET,
 });
