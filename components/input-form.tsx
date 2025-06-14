@@ -7,7 +7,7 @@ import {
   useLoaderStore,
   useMessageStore,
 } from "@/store/store";
-import { FormEvent, MouseEvent, RefObject, useState } from "react";
+import { FormEvent, MouseEvent, RefObject, useRef, useState } from "react";
 import { FiMic, FiStopCircle } from "react-icons/fi";
 import {
   PromptInput,
@@ -25,18 +25,17 @@ interface InputForm {
 
 export function InputForm({ recognitionRef }: InputForm) {
   const { input, setInput } = useInputStore();
-  const [isRecording, setIsRecording] = useState(false);
   const { chatLoading, toggleChatLoading } = useLoaderStore();
-  const { currentChatId } = useChatStore();
   const { setMessage, saveMessage } = useMessageStore();
+  const { currentChatId } = useChatStore();
   const [isLoading, setIsLoading] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
 
-  const toggleRecording = () => {
+  const toggleRecording = async () => {
     if (!recognitionRef.current) {
       alert("Speech recognition not supported in your browser");
       return;
     }
-
     if (isRecording) {
       recognitionRef.current.stop();
       setIsRecording(false);
