@@ -52,11 +52,11 @@ export function ChatUI() {
   };
 
   return loading ? (
-    <div className="w-full h-full flex justify-center items-center">
+    <div className="w-full flex justify-center items-center">
       <Loader />
     </div>
   ) : messages.length === 0 ? (
-    <div className="flex items-center justify-center h-full p-4">
+    <div className="flex items-center justify-center p-4">
       <div className="text-center text-gray-500">
         <p className="text-lg md:text-xl mb-2">Start a new conversation</p>
         <p className="text-sm md:text-base">

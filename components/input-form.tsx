@@ -28,6 +28,7 @@ export function InputForm({ recognitionRef }: InputForm) {
   const { chatLoading, toggleChatLoading } = useLoaderStore();
   const { setMessage, saveMessage } = useMessageStore();
   const { currentChatId } = useChatStore();
+
   const [isLoading, setIsLoading] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
 

@@ -1,7 +1,7 @@
 "use client";
 import { SignOut } from "../auth/sign-out";
 import { redirect, useRouter } from "next/navigation";
-import { NotebookPen } from "lucide-react";
+import { NotebookPen, Plus } from "lucide-react";
 import { UsersService } from "@/actions/users/users.service";
 import React, { useEffect } from "react";
 import { useChatStore, useMessageStore } from "@/store/store";
@@ -34,7 +34,7 @@ export function SideBar({ promises }: SideBarProps) {
         onClick={handleNewChat}
         className="text-black hover:bg-zinc-100 py-2 px-4 rounded-full mb-4 transition-colors cursor-pointer text-sm md:text-base flex items-center justify-start gap-2"
       >
-        <NotebookPen className="w-4 h-4" />
+        <Plus className="w-4 h-4" />
         <span>New chat</span>
       </button>
 
