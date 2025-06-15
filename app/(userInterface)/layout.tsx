@@ -1,7 +1,7 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import { SideBar } from "@/components/sidebar/sidebar";
-import { MobileSidebar } from "@/components/sidebar/mobileSidebar";
-import { auth } from "@/lib/auth";
+import { MobileSidebar } from "@/components/sidebar/mobile-sidebar";
+import { auth } from "@/lib/auth/auth";
 import { redirect } from "next/navigation";
 import { UsersService } from "@/actions/users/users.service";
 

@@ -1,4 +1,4 @@
-import { auth } from "@/lib/auth";
+import { auth } from "@/lib/auth/auth";
 import { SignInForm } from "@/components/auth/sign-in-form";
 import { redirect } from "next/navigation";
 

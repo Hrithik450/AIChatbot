@@ -2,8 +2,9 @@
 
 import { Ref, useRef, useState, useEffect } from "react";
 import { FiCopy, FiVolume2 } from "react-icons/fi";
-import { Loader } from "./loader";
 import { useLoaderStore, useMessageStore } from "@/store/store";
+import { Loader } from "@/components/loader";
+import { ClassicLoader } from "@/components/classic-loader";
 
 interface ChatUI {
   messagesEndRef: Ref<HTMLDivElement>;
@@ -30,7 +31,7 @@ export function ChatUI() {
   const speak = async (text: string, index?: number) => {
     try {
       if (index) setLoadingIndex(index);
-      const res = await fetch("/api/model/voice", {
+      const res = await fetch("/api/model/text-to-speech", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text }),
@@ -53,7 +54,7 @@ export function ChatUI() {
 
   return loading ? (
     <div className="w-full flex justify-center items-center">
-      <Loader />
+      <ClassicLoader />
     </div>
   ) : messages.length === 0 ? (
     <div className="flex items-center justify-center p-4">

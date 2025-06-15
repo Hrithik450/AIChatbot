@@ -1,8 +1,8 @@
 "use client";
 import { Button } from "../ui/button";
 import { useState } from "react";
-import { Loader } from "../loader";
 import { logout } from "@/actions/auth/sign-out";
+import { ClassicLoader } from "@/components/classic-loader";
 
 export const SignOut = () => {
   const [loading, setLoading] = useState(false);
@@ -26,7 +26,7 @@ export const SignOut = () => {
         onClick={handleSignOut}
         disabled={loading}
       >
-        {loading ? <Loader /> : "Sign Out"}
+        {loading ? <ClassicLoader /> : "Sign Out"}
       </Button>
     </div>
   );

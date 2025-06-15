@@ -1,5 +1,5 @@
-import { Chatbot } from "@/components/chat-bot";
+import { Chatbot } from "@/components/user-interface/chat-bot";
 
-export default async function ChatBot() {
+export default async function Home() {
   return <Chatbot />;
 }

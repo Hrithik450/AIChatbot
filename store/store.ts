@@ -3,7 +3,7 @@ import {
   revalidateChatMessages,
 } from "@/actions/revalidates/revalidate";
 import { ChatMessage, Message } from "@/lib/client/types.client";
-import { TITLE_SYSTEM_PROMPT } from "@/lib/prompt-engineer";
+import { TITLE_SYSTEM_PROMPT } from "@/lib/prompt-engineering";
 import { create } from "zustand";
 
 interface ChatStoreProps {
@@ -13,7 +13,6 @@ interface ChatStoreProps {
 
 interface InputStore {
   input: string;
-  setTranscript: (text: string) => void;
   setInput: (value: string) => void;
 }
 
@@ -44,10 +43,6 @@ export const useChatStore = create<ChatStoreProps>((set) => ({
 
 export const useInputStore = create<InputStore>((set) => ({
   input: "",
-  setTranscript: (text) =>
-    set((state) => ({
-      input: state.input + " " + text,
-    })),
   setInput: (value) => set({ input: value }),
 }));
 
@@ -92,7 +87,7 @@ export const useMessageStore = create<MessageStore>((set) => ({
 
     try {
       if (!chatId) {
-        const titleRes = await fetch("/api/model/text", {
+        const titleRes = await fetch("/api/model/text-generation", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
