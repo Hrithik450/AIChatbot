@@ -23,7 +23,7 @@ export function Chatbot() {
   }, []);
 
   return (
-    <div className="flex-1 flex flex-col w-full mx-auto relative overflow-hidden">
+    <div className="relative flex-1 flex flex-col w-full mx-auto overflow-hidden">
       <Header />
       <div
         className={`${
