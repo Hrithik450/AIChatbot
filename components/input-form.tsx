@@ -7,7 +7,14 @@ import {
   useLoaderStore,
   useMessageStore,
 } from "@/store/store";
-import { FormEvent, MouseEvent, RefObject, useRef, useState } from "react";
+import {
+  FormEvent,
+  MouseEvent,
+  RefObject,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { FiMic, FiStopCircle } from "react-icons/fi";
 import {
   PromptInput,
@@ -18,30 +25,159 @@ import {
 import { Button } from "./ui/button";
 import { ArrowUp, CircleStop, Mic, Square } from "lucide-react";
 import { CONTENT_SYSTEM_PROMPT } from "@/lib/prompt-engineer";
+import { ClassicLoader } from "./classic-loader";
 
 interface InputForm {
   recognitionRef: RefObject<any>;
 }
 
 export function InputForm({ recognitionRef }: InputForm) {
-  const { input, setInput } = useInputStore();
+  const { input, setInput, setTranscript } = useInputStore();
   const { chatLoading, toggleChatLoading } = useLoaderStore();
   const { setMessage, saveMessage } = useMessageStore();
   const { currentChatId } = useChatStore();
 
   const [isLoading, setIsLoading] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
+  const [classicLoading, setClassicLoading] = useState(false);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const analyserRef = useRef<AnalyserNode | null>(null);
+  const dataArrayRef = useRef<Uint8Array | null>(null);
+  const animationFrameRef = useRef<number | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
 
-  const toggleRecording = async () => {
-    if (!recognitionRef.current) {
-      alert("Speech recognition not supported in your browser");
+  useEffect(() => {
+    if (isRecording && canvasRef.current && streamRef.current) {
+      startVisualizer(streamRef.current);
+    }
+  }, [isRecording, canvasRef.current]);
+
+  useEffect(() => {
+    const setupRecorder = async () => {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      streamRef.current = stream;
+
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+
+      mediaRecorder.ondataavailable = (e) => {
+        audioChunksRef.current.push(e.data);
+      };
+
+      mediaRecorder.onstop = async () => {
+        const audioBlob = new Blob(audioChunksRef.current, {
+          type: "audio/webm",
+        });
+        const formData = new FormData();
+        formData.append("audio", audioBlob);
+
+        try {
+          const response = await fetch("/api/model/transcribe", {
+            method: "POST",
+            body: formData,
+          });
+
+          const data = await response.json();
+          if (data.text) {
+            setInput(data.text);
+          }
+        } catch (error) {
+          console.error("Transcription error:", error);
+        } finally {
+          setClassicLoading(false);
+          setIsRecording(false);
+        }
+      };
+    };
+
+    setupRecorder();
+
+    return () => {
+      streamRef.current?.getTracks().forEach((track) => track.stop());
+    };
+  }, []);
+
+  const startVisualizer = (stream: MediaStream) => {
+    const audioCtx = new AudioContext();
+    const source = audioCtx.createMediaStreamSource(stream);
+    const analyzer = audioCtx.createAnalyser();
+    analyzer.fftSize = 256;
+
+    const bufferLength = analyzer.frequencyBinCount;
+    const dataArray = new Uint8Array(bufferLength);
+
+    source.connect(analyzer);
+    audioContextRef.current = audioCtx;
+    analyserRef.current = analyzer;
+    dataArrayRef.current = dataArray;
+
+    const canvas = canvasRef.current;
+    if (!canvas || !canvas.getContext) {
+      console.warn("Canvas not ready");
       return;
     }
+
+    const ctx = canvas?.getContext("2d");
+    const draw = () => {
+      if (!ctx || !analyzer) return;
+      analyzer.getByteFrequencyData(dataArrayRef.current!);
+
+      ctx.clearRect(0, 0, canvas!.width, canvas!.height);
+      ctx.fillStyle = "#fff";
+      ctx.fillRect(0, 0, canvas!.width, canvas!.height);
+
+      const sliceWidth = 0.95;
+      const gap = 2;
+      const totalBarWidth = sliceWidth + gap;
+      const centerY = canvas!.height / 2;
+
+      let x = (canvas!.width - bufferLength * totalBarWidth) / 2;
+
+      for (let i = 0; i < bufferLength; i++) {
+        const v = dataArray[i];
+        const amplitude = Math.abs((v - 128) / 128);
+        const y = amplitude * canvas!.height * 0.4;
+
+        ctx.beginPath();
+        ctx.strokeStyle = "#9ca3af";
+        ctx.lineWidth = sliceWidth;
+        ctx.moveTo(x, centerY - y);
+        ctx.lineTo(x, centerY + y);
+        ctx.stroke();
+
+        x += totalBarWidth;
+      }
+
+      animationFrameRef.current = requestAnimationFrame(draw);
+    };
+
+    draw();
+  };
+
+  const stopVisualizer = () => {
+    if (animationFrameRef.current)
+      cancelAnimationFrame(animationFrameRef.current);
+
+    if (audioContextRef.current) {
+      audioContextRef.current.close();
+      audioContextRef.current = null;
+    }
+  };
+
+  const toggleRecording = () => {
+    const mediaRecorder = mediaRecorderRef.current;
+    if (!mediaRecorder) return;
+
     if (isRecording) {
-      recognitionRef.current.stop();
-      setIsRecording(false);
+      mediaRecorder.stop();
+      setClassicLoading(true);
+      stopVisualizer();
     } else {
-      recognitionRef.current.start();
+      audioChunksRef.current = [];
+      mediaRecorder.start();
       setIsRecording(true);
     }
   };
@@ -123,10 +259,23 @@ export function InputForm({ recognitionRef }: InputForm) {
         onValueChange={(value) => setInput(value)}
         className="max-w-3xl w-full mx-auto"
       >
-        <PromptInputTextarea
-          placeholder="Ask me anything..."
-          disabled={chatLoading}
-        />
+        {isRecording ? (
+          <div className="flex min-h-12 items-start">
+            <div className="max-w-full min-w-0 flex-1">
+              <canvas
+                ref={canvasRef}
+                width={300}
+                height={40}
+                className="w-full h-10 rounded bg-black"
+              />
+            </div>
+          </div>
+        ) : (
+          <PromptInputTextarea
+            placeholder="Ask me anything..."
+            disabled={chatLoading}
+          />
+        )}
 
         <PromptInputActions className="justify-end pt-2">
           <PromptInputAction
@@ -141,9 +290,13 @@ export function InputForm({ recognitionRef }: InputForm) {
               onClick={toggleRecording}
             >
               {isRecording ? (
-                <CircleStop className="size-6" />
+                classicLoading ? (
+                  <ClassicLoader />
+                ) : (
+                  <CircleStop className="size-6" />
+                )
               ) : (
-                <Mic className="size-5" />
+                <FiMic className="size-6" />
               )}
             </Button>
           </PromptInputAction>
