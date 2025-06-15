@@ -2,7 +2,7 @@
 import bcrypt from "bcryptjs";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { signUpSchema, TSignInSchema, TSignUpSchema } from "@/lib/db/zodSchema";
+import { signUpSchema, TSignUpSchema } from "@/lib/validations";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
-import { Loader } from "../loader";
+import { Loader } from "@/components/loader";
 import { signIn } from "next-auth/react";
 
 export function SignUpForm() {
